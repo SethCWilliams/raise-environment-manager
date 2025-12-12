@@ -132,19 +132,25 @@ module.exports = function(app, environments) {
     const claimed = [];
     const queued = [];
     const alreadyInQueue = [];
+    const alreadyOwned = [];
 
     for (const serviceName of serviceNames) {
       const service = getService(environments, env, serviceName);
 
       if (service.owner) {
-        // Service is claimed, try to add to queue
-        const alreadyQueued = service.queue.find(item => item.userId === userId);
-        if (alreadyQueued) {
-          alreadyInQueue.push(serviceName);
+        // Check if user already owns this service
+        if (service.owner === userId) {
+          alreadyOwned.push(serviceName);
         } else {
-          service.queue.push({ userId, task });
-          queued.push({ name: serviceName, position: service.queue.length });
-          saveServiceToDB(env, serviceName, service);
+          // Service is claimed by someone else, try to add to queue
+          const alreadyQueued = service.queue.find(item => item.userId === userId);
+          if (alreadyQueued) {
+            alreadyInQueue.push(serviceName);
+          } else {
+            service.queue.push({ userId, task });
+            queued.push({ name: serviceName, position: service.queue.length });
+            saveServiceToDB(env, serviceName, service);
+          }
         }
       } else {
         // Service is available, claim it
@@ -170,6 +176,10 @@ module.exports = function(app, environments) {
 
     if (alreadyInQueue.length > 0) {
       message += `ℹ️ *Already in queue*: ${alreadyInQueue.join(', ')}\n`;
+    }
+
+    if (alreadyOwned.length > 0) {
+      message += `ℹ️ *Already owned by you*: ${alreadyOwned.join(', ')}\n`;
     }
 
     message += `\n📋 Task: ${task}`;
@@ -206,19 +216,25 @@ module.exports = function(app, environments) {
     const claimed = [];
     const queued = [];
     const alreadyInQueue = [];
+    const alreadyOwned = [];
 
     for (const serviceName of serviceNames) {
       const service = getService(environments, env, serviceName);
 
       if (service.owner) {
-        // Service is claimed, try to add to queue
-        const alreadyQueued = service.queue.find(item => item.userId === userId);
-        if (alreadyQueued) {
-          alreadyInQueue.push(serviceName);
+        // Check if user already owns this service
+        if (service.owner === userId) {
+          alreadyOwned.push(serviceName);
         } else {
-          service.queue.push({ userId, task });
-          queued.push({ name: serviceName, position: service.queue.length });
-          saveServiceToDB(env, serviceName, service);
+          // Service is claimed by someone else, try to add to queue
+          const alreadyQueued = service.queue.find(item => item.userId === userId);
+          if (alreadyQueued) {
+            alreadyInQueue.push(serviceName);
+          } else {
+            service.queue.push({ userId, task });
+            queued.push({ name: serviceName, position: service.queue.length });
+            saveServiceToDB(env, serviceName, service);
+          }
         }
       } else {
         // Service is available, claim it
@@ -244,6 +260,10 @@ module.exports = function(app, environments) {
 
     if (alreadyInQueue.length > 0) {
       message += `ℹ️ *Already in queue*: ${alreadyInQueue.join(', ')}\n`;
+    }
+
+    if (alreadyOwned.length > 0) {
+      message += `ℹ️ *Already owned by you*: ${alreadyOwned.join(', ')}\n`;
     }
 
     message += `\n📋 Task: ${task}`;
