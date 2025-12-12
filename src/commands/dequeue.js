@@ -52,9 +52,9 @@ module.exports = function(app, environments) {
     service.queue.splice(queueIndex, 1);
     saveServiceToDB(env, serviceName, service);
 
-    await say({
-      text: `<@${userId}> has been removed from the *${serviceName}* queue in *${env}*.`,
-      response_type: 'in_channel'
+    await respond({
+      text: `You've been removed from the *${serviceName}* queue in *${env}*.`,
+      response_type: 'ephemeral'
     });
   });
 };
