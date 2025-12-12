@@ -8,6 +8,9 @@ const SLACK_APP_TOKEN = process.env.SLACK_APP_TOKEN;
 // Server configuration
 const PORT = process.env.PORT || 3000;
 
+// Database configuration
+const DB_PATH = process.env.DB_PATH || './environments.db';
+
 // Channel whitelist - comma-separated list of allowed channel IDs
 const ALLOWED_CHANNELS = process.env.ALLOWED_CHANNELS
   ? process.env.ALLOWED_CHANNELS.split(',').map(id => id.trim())
@@ -31,6 +34,7 @@ module.exports = {
   SLACK_SIGNING_SECRET,
   SLACK_APP_TOKEN,
   PORT,
+  DB_PATH,
   ALLOWED_CHANNELS,
   SERVICES,
   ENVIRONMENT_NAMES,

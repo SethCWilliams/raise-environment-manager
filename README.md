@@ -370,6 +370,90 @@ By default, the bot works in any channel. To restrict it to specific channels:
 
 **See [OPTIMIZATIONS.md](./OPTIMIZATIONS.md) for the full list of potential improvements.**
 
+## Deploying to Railway
+
+This app is configured for easy deployment to Railway with persistent SQLite storage.
+
+### Prerequisites
+
+1. [Railway account](https://railway.app/) (sign up for free)
+2. Your Slack app credentials (tokens from setup above)
+3. Git repository (preferably on GitHub)
+
+### Deployment Steps
+
+#### 1. Create a New Project on Railway
+
+- Go to [Railway](https://railway.app/) and create a new project
+- Choose "Deploy from GitHub repo" or use the Railway CLI
+
+#### 2. Add a Volume for Database Persistence
+
+In your Railway project:
+1. Go to your service settings
+2. Click on "Volumes" in the left sidebar
+3. Click "New Volume"
+4. Set the mount path to: `/data`
+5. Volume will be created (minimum 5GB on Hobby plan, but you only pay for what you use)
+
+#### 3. Configure Environment Variables
+
+In Railway's dashboard, add these variables:
+
+**Required:**
+- `SLACK_BOT_TOKEN` - Your bot token (xoxb-...)
+- `SLACK_SIGNING_SECRET` - Your signing secret
+- `SLACK_APP_TOKEN` - Your app token (xapp-...)
+- `SERVICES` - Comma-separated service names
+- `DB_PATH` - Set to `/data/environments.db` (for volume persistence)
+
+**Optional:**
+- `ENVIRONMENTS` - Comma-separated environment names (defaults to `staging,dev`)
+- `ALLOWED_CHANNELS` - Comma-separated channel IDs (leave empty to allow all)
+- `PORT` - Railway sets this automatically, no need to configure
+
+#### 4. Deploy
+
+- Railway will automatically deploy when you push to your connected branch
+- Or use the Railway CLI: `railway up`
+
+#### 5. Verify Deployment
+
+- Check the deployment logs for "Environment Manager Bot is running!"
+- Railway will provide a public URL for your dashboard
+- Test Slack commands in your workspace
+
+### Cost Estimate
+
+With SQLite and a volume:
+- **Hobby plan**: $5/month subscription (includes $5 usage credit)
+- **Volume storage**: ~$0.01-0.15/month (you only pay for actual data stored)
+- **Total**: Likely free or minimal cost for this lightweight app
+
+### Important Notes
+
+- The volume is persistent - your database survives deployments and restarts
+- You only pay $0.15/GB/month for actual storage used (your DB is likely < 1MB)
+- Railway auto-deploys when you push to your repository
+- The app uses Socket Mode, so no webhook URL configuration needed
+
+### Troubleshooting Railway Deployment
+
+**Volume not persisting:**
+- Verify `DB_PATH=/data/environments.db` is set in environment variables
+- Check that volume is mounted at `/data`
+- View logs to ensure database is being created at the correct path
+
+**App crashing on startup:**
+- Check Railway logs for error messages
+- Verify all required environment variables are set
+- Ensure Slack tokens are correct
+
+**High costs:**
+- You should only be paying for actual storage used (~pennies/month)
+- Check your Railway dashboard for resource usage
+- Volume is billed at $0.15/GB/month, but only for space actually used
+
 ## Future Enhancements
 
 - Auto-release after timeout

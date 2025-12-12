@@ -1,8 +1,8 @@
 const Database = require('better-sqlite3');
-const { SERVICES, ENVIRONMENT_NAMES } = require('../config');
+const { SERVICES, ENVIRONMENT_NAMES, DB_PATH } = require('../config');
 
 // Initialize SQLite database
-const db = new Database('environments.db');
+const db = new Database(DB_PATH);
 
 // Create tables if they don't exist
 db.exec(`
