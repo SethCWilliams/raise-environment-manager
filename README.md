@@ -5,6 +5,7 @@ A Slack bot for managing environment deployments. Allows teams to claim, release
 ## Features
 
 **Slack Commands:**
+- **Interactive modals**: Type `/claim s` or `/release s` to get a friendly UI with checkboxes (no typing!)
 - **Multi-service claiming**: Claim multiple services at once with comma-separated names
 - **Environment shortcuts**: Use `s` for staging, `d` for dev
 - **Automatic queueing**: Trying to claim a busy service automatically adds you to queue
@@ -197,8 +198,17 @@ PORT=8080
 
 ### Claim Services
 
-Claim one or more services in an environment:
+**Interactive Mode (Recommended):**
+```
+/claim s
+/claim d
+```
+This opens an interactive dialog where you can:
+- Check boxes to select multiple services
+- Type your task description
+- Submit with one click
 
+**Text Mode:**
 ```
 /claim s fundraisers-api deploying feature-123
 /claim staging fundraisers-api,fundraisers-worker testing hotfix
@@ -213,8 +223,17 @@ Claim one or more services in an environment:
 
 ### Release Services
 
-Release one or more services you own:
+**Interactive Mode (Recommended):**
+```
+/release s
+/release d
+```
+This opens an interactive dialog where you can:
+- See all services you currently own
+- Check boxes to select which ones to release
+- Use the "Release All" option to release everything at once
 
+**Text Mode:**
 ```
 /release s fundraisers-api
 /release staging fundraisers-api,fundraisers-worker
