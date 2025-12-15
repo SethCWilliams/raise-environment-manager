@@ -22,8 +22,11 @@ module.exports = async function({ respond }, environments, args) {
 
 ━━━ *QUEUE MANAGEMENT* ━━━
 \`/claim queue <env> <service> <task>\` - Join queue for busy service
-\`/claim dequeue <env> <service1,service2>\` - Remove yourself from queue
-\`/claim prioritize <env> <service1,service2> <task>\` - Skip to front of queue (urgent)
+\`/claim dequeue\` - Interactive modal to leave queues
+\`/claim dequeue <env> <service1,service2>\` - Remove yourself from specific queues
+\`/claim prioritize\` - Interactive modal for urgent takeover
+\`/claim prioritize <env>\` - Interactive modal for specific environment
+\`/claim prioritize <env> <service1,service2> <task>\` - Urgent takeover (direct)
 
 ━━━ *VIEWING STATUS* ━━━
 \`/claim status\` - View all in-use services across environments

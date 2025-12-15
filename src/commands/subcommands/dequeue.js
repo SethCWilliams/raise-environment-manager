@@ -1,13 +1,34 @@
 const { normalizeEnvironment, getService, isValidEnvironment, isValidService } = require('../../utils/helpers');
 const { SERVICES } = require('../../config');
 const { saveServiceToDB } = require('../../database/db');
+const dequeueModal = require('../modals/dequeueModal');
 
-module.exports = async function({ command, respond }, environments, args) {
+module.exports = async function({ command, respond, client }, environments, args) {
   const userId = command.user_id;
+
+  // Case 1: No args - show modal with all queues
+  if (args.length === 0) {
+    try {
+      await dequeueModal.showModal({ client, command, userId, environments });
+    } catch (error) {
+      if (error.message === 'NOT_IN_ANY_QUEUE') {
+        await respond({
+          text: `You're not in any queues.`,
+          response_type: 'ephemeral'
+        });
+      } else {
+        await respond({
+          text: 'Failed to open interactive dialog. Please try again.',
+          response_type: 'ephemeral'
+        });
+      }
+    }
+    return;
+  }
 
   if (args.length < 2) {
     await respond({
-      text: `Usage: \`/claim dequeue <environment> <service1,service2,...>\`\nEnvironments: Use shortcuts or full names\nServices: ${SERVICES.join(', ')}\nTip: Use commas to dequeue from multiple services at once\n\nType \`/claim help\` for more options!`,
+      text: `Usage: \`/claim dequeue <environment> <service1,service2,...>\`\nEnvironments: Use shortcuts or full names\nServices: ${SERVICES.join(', ')}\nTip: Use commas to dequeue from multiple services at once\n\nOr use \`/claim dequeue\` for an interactive menu!\n\nType \`/claim help\` for more options!`,
       response_type: 'ephemeral'
     });
     return;

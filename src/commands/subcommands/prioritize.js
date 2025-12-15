@@ -1,21 +1,26 @@
-const { normalizeEnvironment, isValidEnvironment, getService, isValidService } = require('../../utils/helpers');
+const { normalizeEnvironment, isValidEnvironment, isValidService } = require('../../utils/helpers');
 const { SERVICES } = require('../../config');
-const { saveServiceToDB } = require('../../database/db');
+const prioritizeModal = require('../modals/prioritizeModal');
 
-module.exports = async function({ command, say, respond }, environments, args) {
+module.exports = async function({ command, say, respond, client }, environments, args) {
   const userId = command.user_id;
 
-  if (args.length < 3) {
-    await respond({
-      text: `Usage: \`/claim prioritize <environment> <service1,service2,...> <task description>\`\nEnvironments: Use shortcuts or full names\nServices: ${SERVICES.join(', ')}\n\n⚡ This command immediately claims the service for urgent work.\nThe current owner is moved to queue position 1.\nUse this for critical hotfixes and production issues.\n\nType \`/claim help\` for more options!`,
-      response_type: 'ephemeral'
-    });
+  // Case 1: No args - show modal with env dropdown
+  if (args.length === 0) {
+    try {
+      await prioritizeModal.showModal({ client, command });
+    } catch (error) {
+      console.error('Error opening prioritize modal:', error);
+      await respond({
+        text: 'Failed to open interactive dialog. Please try again.',
+        response_type: 'ephemeral'
+      });
+    }
     return;
   }
 
+  // Parse and validate environment
   const env = normalizeEnvironment(args[0].toLowerCase());
-  const serviceNames = args[1].split(',').map(s => s.trim());
-  const task = args.slice(2).join(' ');
 
   if (!isValidEnvironment(env)) {
     await respond({
@@ -24,6 +29,32 @@ module.exports = async function({ command, say, respond }, environments, args) {
     });
     return;
   }
+
+  // Case 2: Only env provided - show modal with services
+  if (args.length === 1) {
+    try {
+      await prioritizeModal.showModalWithEnv({ client, command, env });
+    } catch (error) {
+      console.error('Error opening prioritize modal with env:', error);
+      await respond({
+        text: 'Failed to open interactive dialog. Please try again.',
+        response_type: 'ephemeral'
+      });
+    }
+    return;
+  }
+
+  // Case 3: Direct prioritize with full args
+  if (args.length < 3) {
+    await respond({
+      text: `Usage: \`/claim prioritize <environment> <service1,service2,...> <task description>\`\nEnvironments: Use shortcuts or full names\nServices: ${SERVICES.join(', ')}\n\nOr use \`/claim prioritize\` or \`/claim prioritize <env>\` for an interactive menu!\n\n⚡ This command immediately claims the service for urgent work.\nThe current owner is moved to queue position 1.\nUse this for critical hotfixes and production issues.\n\nType \`/claim help\` for more options!`,
+      response_type: 'ephemeral'
+    });
+    return;
+  }
+
+  const serviceNames = args[1].split(',').map(s => s.trim());
+  const task = args.slice(2).join(' ');
 
   // Validate all services first
   const invalidServices = serviceNames.filter(name => !isValidService(name));
@@ -35,47 +66,14 @@ module.exports = async function({ command, say, respond }, environments, args) {
     return;
   }
 
-  // Process each service
-  const claimed = [];
-  const takenOver = [];
-  const alreadyOwned = [];
-
-  for (const serviceName of serviceNames) {
-    const service = getService(environments, env, serviceName);
-
-    if (!service.owner) {
-      // Service is available, claim it immediately
-      service.owner = userId;
-      service.task = task;
-      service.startTime = Date.now();
-      claimed.push(serviceName);
-      saveServiceToDB(env, serviceName, service);
-    } else if (service.owner === userId) {
-      // User already owns this service
-      alreadyOwned.push(serviceName);
-    } else {
-      // Service is claimed by someone else - TAKE IT OVER
-      const previousOwner = service.owner;
-      const previousTask = service.task;
-
-      // Remove user from queue if they're already in it
-      const existingIndex = service.queue.findIndex(item => item.userId === userId);
-      if (existingIndex !== -1) {
-        service.queue.splice(existingIndex, 1);
-      }
-
-      // Add previous owner to front of queue
-      service.queue.unshift({ userId: previousOwner, task: previousTask });
-
-      // Claim the service for the new user
-      service.owner = userId;
-      service.task = task;
-      service.startTime = Date.now();
-
-      takenOver.push(serviceName);
-      saveServiceToDB(env, serviceName, service);
-    }
-  }
+  // Process prioritize using shared business logic
+  const { claimed, takenOver, alreadyOwned } = prioritizeModal.processPrioritize(
+    environments,
+    env,
+    serviceNames,
+    userId,
+    task
+  );
 
   // Build response message
   let message = `<@${userId}>:\n`;
