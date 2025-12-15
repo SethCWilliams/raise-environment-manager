@@ -137,9 +137,10 @@ async function showModalWithEnv({ client, command, env, userId, environments }) 
               text: 'Your Services'
             },
             element: {
-              type: 'checkboxes',
+              type: 'multi_static_select',
               action_id: 'services_selected',
-              options: serviceOptions
+              options: serviceOptions,
+              placeholder: { type: 'plain_text', text: 'Choose services...' }
             }
           }
         ]

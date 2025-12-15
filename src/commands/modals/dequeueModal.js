@@ -83,9 +83,10 @@ async function showModal({ client, command, userId, environments }) {
               text: 'Your Queues'
             },
             element: {
-              type: 'checkboxes',
+              type: 'multi_static_select',
               action_id: 'services_selected',
-              options: serviceOptions
+              options: serviceOptions,
+              placeholder: { type: 'plain_text', text: 'Choose queues to leave...' }
             }
           }
         ]

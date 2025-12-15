@@ -44,9 +44,10 @@ async function showModal({ client, command }) {
             block_id: 'services_block',
             label: { type: 'plain_text', text: 'Select Services' },
             element: {
-              type: 'checkboxes',
+              type: 'multi_static_select',
               action_id: 'services_selected',
-              options: serviceOptions
+              options: serviceOptions,
+              placeholder: { type: 'plain_text', text: 'Choose services...' }
             }
           },
           {
@@ -92,9 +93,10 @@ async function showModalWithEnv({ client, command, env }) {
             block_id: 'services_block',
             label: { type: 'plain_text', text: 'Select Services' },
             element: {
-              type: 'checkboxes',
+              type: 'multi_static_select',
               action_id: 'services_selected',
-              options: serviceOptions
+              options: serviceOptions,
+              placeholder: { type: 'plain_text', text: 'Choose services...' }
             }
           },
           {
