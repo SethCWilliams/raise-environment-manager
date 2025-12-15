@@ -1,6 +1,6 @@
 const { SERVICES, ENVIRONMENT_NAMES } = require('../../config');
 
-module.exports = async function({ respond }, environments, args) {
+module.exports = async function ({ respond }, environments, args) {
   const envList = ENVIRONMENT_NAMES.join(', ');
   const serviceList = SERVICES.join(', ');
 
@@ -40,7 +40,7 @@ Examples:
 *📊 OTHER COMMANDS*
 
 \`/claim status\` - View all in-use services
-\`/claim force-drop <env> <services>\` - Admin override
+\`/claim force-drop <env> <services>\` - Force drop of specific services
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
