@@ -5,41 +5,51 @@ module.exports = async function({ respond }, environments, args) {
   const serviceList = SERVICES.join(', ');
 
   const helpText = `
-*Environment Manager - /claim Command*
+*🎯 Environment Manager - Quick Reference*
 
 *Environments:* ${envList}
 *Services:* ${serviceList}
 
-━━━ *CLAIMING SERVICES* ━━━
-\`/claim\` - Interactive modal with environment + service selection
-\`/claim <env>\` - Interactive modal for specific environment
-\`/claim <env> <service1,service2> <task>\` - Direct claim (supports multiple services)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-━━━ *RELEASING SERVICES* ━━━
-\`/claim drop\` - Interactive modal to release services
-\`/claim drop <env>\` - Interactive modal for specific environment
-\`/claim drop <env> <service1,service2>\` - Release specific services
+*📋 INTERACTIVE MODALS* (Easiest - Just Fill the Form!)
 
-━━━ *QUEUE MANAGEMENT* ━━━
-\`/claim queue\` - Interactive modal to join queues
-\`/claim queue <env>\` - Interactive modal for specific environment
-\`/claim queue <env> <service1,service2> <task>\` - Join queue (direct)
-\`/claim dequeue\` - Interactive modal to leave queues
-\`/claim dequeue <env> <service1,service2>\` - Remove yourself from specific queues
-\`/claim prioritize\` - Interactive modal for urgent takeover
-\`/claim prioritize <env>\` - Interactive modal for specific environment
-\`/claim prioritize <env> <service1,service2> <task>\` - Urgent takeover (direct)
+\`/claim\` - Claim services
+\`/claim drop\` - Release services
+\`/claim queue\` - Join queue for busy services
+\`/claim dequeue\` - Leave queues you're in
+\`/claim prioritize\` - Urgent takeover (use sparingly!)
 
-━━━ *VIEWING STATUS* ━━━
-\`/claim status\` - View all in-use services across environments
+💡 _Tip: Add environment after command (e.g., \`/claim s\`) to skip env selection_
 
-━━━ *ADMIN COMMANDS* ━━━
-\`/claim force-drop <env> <service1,service2>\` - Override any claim
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-━━━ *TIPS* ━━━
-• Use commas to work with multiple services at once
-• Environment shortcuts: Use first letter (e.g., \`s\` for staging)
-• Interactive modals are the easiest way to get started!
+*⚡ DIRECT COMMANDS* (Power Users - Faster!)
+
+Pattern: \`/claim <subcommand> <env> <service1,service2> <task>\`
+
+Examples:
+  \`/claim s api,worker Deploying v2.0\`
+  \`/claim drop s api,worker\`
+  \`/claim queue s api Bug fixes\`
+  \`/claim dequeue s api,worker\`
+  \`/claim prioritize s api Hotfix\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+*📊 OTHER COMMANDS*
+
+\`/claim status\` - View all in-use services
+\`/claim force-drop <env> <services>\` - Admin override
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+*✨ SHORTCUTS & TIPS*
+
+• Environment shortcuts: \`s\` = staging, \`d\` = dev
+• Multiple services: Use commas (\`api,worker,frontend\`)
+• Auto-claim: When queued, you'll claim automatically when released
+• Priority mode: Immediately takes over, moves current owner to queue position 1
   `.trim();
 
   await respond({
