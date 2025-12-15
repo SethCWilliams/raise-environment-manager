@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Database files (use Railway persistent volume)
+*.db
+*.db-shm
+*.db-wal
+
+# Git
+.git/
+.gitignore
+
+# Development
+.vscode/
+.idea/
+*.log
+
+# Claude Code
+.claude/
+
+# Documentation
+README.md
+CLAUDE.md
+
+# Testing
+.DS_Store
+*.test.js
+coverage/
