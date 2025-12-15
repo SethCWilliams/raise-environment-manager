@@ -19,7 +19,7 @@ module.exports = function(app, environments) {
 
     if (args.length < 3) {
       await respond({
-        text: `Usage: \`/priority <environment> <service1,service2,...> <task description>\`\nEnvironments: staging (or s), dev (or d)\nServices: ${SERVICES.join(', ')}\n\n⚡ This command puts you at the front of the queue (position 1) without kicking anyone out.\nUse this for urgent work like hotfixes.`,
+        text: `Usage: \`/priority <environment> <service1,service2,...> <task description>\`\nEnvironments: staging (or s), dev (or d)\nServices: ${SERVICES.join(', ')}\n\n⚡ This command immediately claims the service for urgent work.\nThe current owner is moved to queue position 1.\nUse this for critical hotfixes and production issues.`,
         response_type: 'ephemeral'
       });
       return;
@@ -50,9 +50,8 @@ module.exports = function(app, environments) {
 
     // Process each service
     const claimed = [];
-    const priorityQueued = [];
+    const takenOver = [];
     const alreadyOwned = [];
-    const movedToFront = [];
 
     for (const serviceName of serviceNames) {
       const service = getService(environments, env, serviceName);
@@ -68,22 +67,25 @@ module.exports = function(app, environments) {
         // User already owns this service
         alreadyOwned.push(serviceName);
       } else {
-        // Service is claimed by someone else - add to priority queue
-        // Check if user is already in queue
-        const existingIndex = service.queue.findIndex(item => item.userId === userId);
+        // Service is claimed by someone else - TAKE IT OVER
+        const previousOwner = service.owner;
+        const previousTask = service.task;
 
+        // Remove user from queue if they're already in it
+        const existingIndex = service.queue.findIndex(item => item.userId === userId);
         if (existingIndex !== -1) {
-          // User already in queue - move them to front
-          const [userQueueItem] = service.queue.splice(existingIndex, 1);
-          userQueueItem.task = task; // Update task description
-          service.queue.unshift(userQueueItem);
-          movedToFront.push(serviceName);
-        } else {
-          // User not in queue - insert at front
-          service.queue.unshift({ userId, task });
-          priorityQueued.push(serviceName);
+          service.queue.splice(existingIndex, 1);
         }
 
+        // Add previous owner to front of queue
+        service.queue.unshift({ userId: previousOwner, task: previousTask });
+
+        // Claim the service for the new user
+        service.owner = userId;
+        service.task = task;
+        service.startTime = Date.now();
+
+        takenOver.push(serviceName);
         saveServiceToDB(env, serviceName, service);
       }
     }
@@ -95,12 +97,9 @@ module.exports = function(app, environments) {
       message += `✅ *Claimed* (service was available): ${claimed.join(', ')}\n`;
     }
 
-    if (priorityQueued.length > 0) {
-      message += `⚡ *Added to PRIORITY queue* (position 1): ${priorityQueued.join(', ')}\n`;
-    }
-
-    if (movedToFront.length > 0) {
-      message += `⚡ *Moved to PRIORITY queue* (position 1): ${movedToFront.join(', ')}\n`;
+    if (takenOver.length > 0) {
+      message += `⚡ *PRIORITY TAKEOVER*: ${takenOver.join(', ')}\n`;
+      message += `   Previous owner moved to queue position 1\n`;
     }
 
     if (alreadyOwned.length > 0) {
