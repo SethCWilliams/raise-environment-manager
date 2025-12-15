@@ -1,21 +1,26 @@
-const { normalizeEnvironment, getService, isValidEnvironment } = require('../../utils/helpers');
+const { normalizeEnvironment, isValidEnvironment, isValidService } = require('../../utils/helpers');
 const { SERVICES } = require('../../config');
-const { saveServiceToDB } = require('../../database/db');
+const queueModal = require('../modals/queueModal');
 
-module.exports = async function({ command, say, respond }, environments, args) {
+module.exports = async function({ command, say, respond, client }, environments, args) {
   const userId = command.user_id;
 
-  if (args.length < 3) {
-    await respond({
-      text: `Usage: \`/claim queue <environment> <service> <task description>\`\nEnvironments: Use shortcuts or full names\nServices: ${SERVICES.join(', ')}\n\nType \`/claim help\` for more options!`,
-      response_type: 'ephemeral'
-    });
+  // Case 1: No args - show modal with env dropdown
+  if (args.length === 0) {
+    try {
+      await queueModal.showModal({ client, command });
+    } catch (error) {
+      console.error('Error opening queue modal:', error);
+      await respond({
+        text: 'Failed to open interactive dialog. Please try again.',
+        response_type: 'ephemeral'
+      });
+    }
     return;
   }
 
+  // Parse and validate environment
   const env = normalizeEnvironment(args[0].toLowerCase());
-  const serviceName = args[1];
-  const task = args.slice(2).join(' ');
 
   if (!isValidEnvironment(env)) {
     await respond({
@@ -25,42 +30,75 @@ module.exports = async function({ command, say, respond }, environments, args) {
     return;
   }
 
-  const service = getService(environments, env, serviceName);
+  // Case 2: Only env provided - show modal with services
+  if (args.length === 1) {
+    try {
+      await queueModal.showModalWithEnv({ client, command, env });
+    } catch (error) {
+      console.error('Error opening queue modal with env:', error);
+      await respond({
+        text: 'Failed to open interactive dialog. Please try again.',
+        response_type: 'ephemeral'
+      });
+    }
+    return;
+  }
 
-  if (!service) {
+  // Case 3: Direct queue with full args
+  if (args.length < 3) {
     await respond({
-      text: `Invalid service "${serviceName}". Available services: ${SERVICES.join(', ')}`,
+      text: `Usage: \`/claim queue <environment> <service1,service2,...> <task description>\`\nEnvironments: Use shortcuts or full names\nServices: ${SERVICES.join(', ')}\nTip: Use commas to queue for multiple services at once\n\nOr use \`/claim queue\` or \`/claim queue <env>\` for an interactive menu!\n\nType \`/claim help\` for more options!`,
       response_type: 'ephemeral'
     });
     return;
   }
 
-  // Check if service is available
-  if (!service.owner) {
+  const serviceNames = args[1].split(',').map(s => s.trim());
+  const task = args.slice(2).join(' ');
+
+  // Validate all services first
+  const invalidServices = serviceNames.filter(name => !isValidService(name));
+  if (invalidServices.length > 0) {
     await respond({
-      text: `The *${serviceName}* service in *${env}* is available! Use \`/claim ${env} ${serviceName} ${task}\` instead.`,
+      text: `Invalid service(s): ${invalidServices.join(', ')}\nAvailable services: ${SERVICES.join(', ')}`,
       response_type: 'ephemeral'
     });
     return;
   }
 
-  // Check if user is already in queue
-  const alreadyQueued = service.queue.find(item => item.userId === userId);
-  if (alreadyQueued) {
-    await respond({
-      text: `You're already in the queue for *${serviceName}* in *${env}*.`,
-      response_type: 'ephemeral'
+  // Process queue using shared business logic
+  const { queued, available, alreadyQueued } = queueModal.processQueue(
+    environments,
+    env,
+    serviceNames,
+    userId,
+    task
+  );
+
+  // Build response message
+  let message = `<@${userId}>:\n`;
+
+  if (queued.length > 0) {
+    message += `⏳ *Added to queue in ${env}*:\n`;
+    queued.forEach(q => {
+      message += `  • ${q.name} (position ${q.position})\n`;
     });
-    return;
   }
 
-  // Add to queue
-  service.queue.push({ userId, task });
-  const position = service.queue.length;
-  saveServiceToDB(env, serviceName, service);
+  if (available.length > 0) {
+    message += `\n💡 *Available (use /claim instead)*: ${available.join(', ')}`;
+  }
+
+  if (alreadyQueued.length > 0) {
+    message += `\nℹ️ *Already in queue*: ${alreadyQueued.join(', ')}`;
+  }
+
+  if (queued.length > 0) {
+    message += `\n\n📋 Task: ${task}`;
+  }
 
   await say({
-    text: `<@${userId}> has been added to the *${serviceName}* queue in *${env}* (position: ${position}) for: ${task}`,
+    text: message.trim(),
     response_type: 'in_channel'
   });
 };

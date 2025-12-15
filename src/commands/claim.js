@@ -3,6 +3,7 @@ const claimModal = require('./modals/claimModal');
 const dropModal = require('./modals/dropModal');
 const dequeueModal = require('./modals/dequeueModal');
 const prioritizeModal = require('./modals/prioritizeModal');
+const queueModal = require('./modals/queueModal');
 
 // Import subcommand handlers
 const SUBCOMMANDS = {
@@ -90,4 +91,5 @@ module.exports = function(app, environments) {
   dropModal.registerHandlers(app, environments);
   dequeueModal.registerHandlers(app, environments);
   prioritizeModal.registerHandlers(app, environments);
+  queueModal.registerHandlers(app, environments);
 };

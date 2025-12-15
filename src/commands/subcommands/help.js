@@ -21,7 +21,9 @@ module.exports = async function({ respond }, environments, args) {
 \`/claim drop <env> <service1,service2>\` - Release specific services
 
 ━━━ *QUEUE MANAGEMENT* ━━━
-\`/claim queue <env> <service> <task>\` - Join queue for busy service
+\`/claim queue\` - Interactive modal to join queues
+\`/claim queue <env>\` - Interactive modal for specific environment
+\`/claim queue <env> <service1,service2> <task>\` - Join queue (direct)
 \`/claim dequeue\` - Interactive modal to leave queues
 \`/claim dequeue <env> <service1,service2>\` - Remove yourself from specific queues
 \`/claim prioritize\` - Interactive modal for urgent takeover
