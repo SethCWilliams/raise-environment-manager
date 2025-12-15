@@ -18,6 +18,7 @@ const setupQueueCommand = require('./src/commands/queue');
 const setupDequeueCommand = require('./src/commands/dequeue');
 const setupEnvStatusCommand = require('./src/commands/envstatus');
 const setupForceReleaseCommand = require('./src/commands/forcerelease');
+const setupPriorityCommand = require('./src/commands/priority');
 
 // Initialize the Slack app
 const app = new App({
@@ -43,6 +44,7 @@ setupQueueCommand(app, environments);
 setupDequeueCommand(app, environments);
 setupEnvStatusCommand(app, environments);
 setupForceReleaseCommand(app, environments);
+setupPriorityCommand(app, environments);
 
 // Setup API routes
 setupAPIRoutes(webApp, app, environments);
