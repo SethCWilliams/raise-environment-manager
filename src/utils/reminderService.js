@@ -12,12 +12,12 @@ const CHECK_INTERVAL = 15 * 60 * 1000; // 15 minutes
 // const CHECK_INTERVAL = 30 * 1000; // 30 seconds for testing
 
 /**
- * Check if current time is within reminder hours (3pm-midnight UTC)
+ * Check if current time is within reminder hours (4pm-11pm UTC)
  */
 function isWithinReminderHours() {
   const now = new Date();
   const utcHour = now.getUTCHours();
-  return utcHour >= 15 && utcHour < 24; // 3pm (15:00) to midnight (24:00) UTC
+  return utcHour >= 16 && utcHour <= 23; // 4pm (16:00) to 11pm (23:00) UTC inclusive
 }
 
 /**
@@ -158,7 +158,7 @@ function start(app, environments) {
   console.log('🚀 Starting reminder service...');
   console.log(`   - Reminder threshold: ${formatDuration(TWO_HOURS)}`);
   console.log(`   - Check interval: ${formatDuration(CHECK_INTERVAL)}`);
-  console.log(`   - Active hours: 3pm-midnight UTC`);
+  console.log(`   - Active hours: 4pm-11pm UTC`);
 
   // Run initial check after 1 minute (give the app time to fully start)
   setTimeout(() => {
