@@ -31,7 +31,26 @@ async function showModal({ client, command, userId, environments }) {
   }
 
   // Build service options with environment prefix
+  // First, add "Release All" options at the top for quick access
   const serviceOptions = [];
+  ENVIRONMENT_NAMES.forEach(envName => {
+    if (allOwnedServices[envName] && allOwnedServices[envName].length > 0) {
+      const count = allOwnedServices[envName].length;
+      serviceOptions.push({
+        text: {
+          type: 'plain_text',
+          text: `🔓 Release All in ${envName} (${count} service${count > 1 ? 's' : ''})`
+        },
+        value: `__RELEASE_ALL__:${envName}`,
+        description: {
+          type: 'plain_text',
+          text: `Release all ${count} service${count > 1 ? 's' : ''} you own in ${envName}`
+        }
+      });
+    }
+  });
+
+  // Then add individual services grouped by environment
   for (const [envName, services] of Object.entries(allOwnedServices)) {
     services.forEach(serviceName => {
       serviceOptions.push({
@@ -43,19 +62,6 @@ async function showModal({ client, command, userId, environments }) {
       });
     });
   }
-
-  // Add "Release All" option for each environment
-  ENVIRONMENT_NAMES.forEach(envName => {
-    if (allOwnedServices[envName] && allOwnedServices[envName].length > 0) {
-      serviceOptions.unshift({
-        text: {
-          type: 'plain_text',
-          text: `🔓 Release All in ${envName}`
-        },
-        value: `__RELEASE_ALL__:${envName}`
-      });
-    }
-  });
 
   try {
     await client.views.open({
@@ -74,7 +80,7 @@ async function showModal({ client, command, userId, environments }) {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: 'Select which services to release:'
+              text: 'Select which services to release:\n• Use "🔓 Release All in [env]" to release everything in an environment\n• Or select individual services below'
             }
           },
           {
@@ -88,7 +94,7 @@ async function showModal({ client, command, userId, environments }) {
               type: 'multi_static_select',
               action_id: 'services_selected',
               options: serviceOptions,
-              placeholder: { type: 'plain_text', text: 'Choose services...' }
+              placeholder: { type: 'plain_text', text: 'Choose services or "Release All"...' }
             }
           }
         ]
