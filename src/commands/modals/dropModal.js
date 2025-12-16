@@ -30,6 +30,33 @@ async function showModal({ client, command, userId, environments }) {
     throw new Error('NO_OWNED_SERVICES');
   }
 
+  // Build service options with environment prefix
+  const serviceOptions = [];
+  for (const [envName, services] of Object.entries(allOwnedServices)) {
+    services.forEach(serviceName => {
+      serviceOptions.push({
+        text: {
+          type: 'plain_text',
+          text: `${envName} - ${serviceName}`
+        },
+        value: `${envName}:${serviceName}`
+      });
+    });
+  }
+
+  // Add "Release All" option for each environment
+  ENVIRONMENT_NAMES.forEach(envName => {
+    if (allOwnedServices[envName] && allOwnedServices[envName].length > 0) {
+      serviceOptions.unshift({
+        text: {
+          type: 'plain_text',
+          text: `🔓 Release All in ${envName}`
+        },
+        value: `__RELEASE_ALL__:${envName}`
+      });
+    }
+  });
+
   try {
     await client.views.open({
       trigger_id: command.trigger_id,
@@ -44,21 +71,24 @@ async function showModal({ client, command, userId, environments }) {
         submit: { type: 'plain_text', text: 'Release' },
         blocks: [
           {
-            type: 'input',
-            block_id: 'env_block',
-            label: { type: 'plain_text', text: 'Environment' },
-            element: {
-              type: 'static_select',
-              action_id: 'env_select',
-              options: envOptions,
-              initial_option: envOptions[0] // Default to first environment
-            }
-          },
-          {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: '_Note: Only your services for the selected environment will be released._'
+              text: 'Select which services to release:'
+            }
+          },
+          {
+            type: 'input',
+            block_id: 'services_block',
+            label: {
+              type: 'plain_text',
+              text: 'Services to Release'
+            },
+            element: {
+              type: 'multi_static_select',
+              action_id: 'services_selected',
+              options: serviceOptions,
+              placeholder: { type: 'plain_text', text: 'Choose services...' }
             }
           }
         ]
@@ -156,57 +186,78 @@ async function showModalWithEnv({ client, command, env, userId, environments }) 
  * Register modal view handlers
  */
 function registerHandlers(app, environments) {
-  // Handler for modal with environment picker (simplified - just shows message)
+  // Handler for modal with environment picker
   app.view('drop_modal_with_env', async ({ ack, view, client, body }) => {
     await ack();
 
     const { channel_id, all_owned } = JSON.parse(view.private_metadata);
     const userId = body.user.id;
 
-    // Extract environment selection
-    const envBlock = view.state.values.env_block.env_select;
-    const env = envBlock.selected_option.value;
+    // Extract selected services
+    const servicesBlock = view.state.values.services_block.services_selected;
+    const selectedServices = servicesBlock.selected_options || [];
 
-    // Get owned services for selected environment
-    const serviceNames = all_owned[env] || [];
-
-    if (serviceNames.length === 0) {
-      try {
-        await client.chat.postMessage({
-          channel: channel_id,
-          text: `You don't own any services in *${env}*.`
-        });
-      } catch (error) {
-        console.error('Error posting message:', error);
-      }
+    if (selectedServices.length === 0) {
       return;
     }
 
-    // Process release using shared business logic
-    const { released, notOwned, autoClaimed } = processRelease(
-      environments,
-      env,
-      serviceNames,
-      userId
-    );
+    // Group selected services by environment
+    const servicesByEnv = {};
+
+    selectedServices.forEach(opt => {
+      const value = opt.value;
+
+      // Check if it's a "Release All" option
+      if (value.startsWith('__RELEASE_ALL__:')) {
+        const env = value.split(':')[1];
+        servicesByEnv[env] = all_owned[env] || [];
+      } else {
+        // Parse "env:service" format
+        const [env, serviceName] = value.split(':');
+        if (!servicesByEnv[env]) {
+          servicesByEnv[env] = [];
+        }
+        servicesByEnv[env].push(serviceName);
+      }
+    });
+
+    // Process releases for each environment
+    const allReleased = [];
+    const allAutoClaimed = [];
+    const allNotOwned = [];
+
+    for (const [env, serviceNames] of Object.entries(servicesByEnv)) {
+      if (serviceNames.length === 0) continue;
+
+      const { released, notOwned, autoClaimed } = processRelease(
+        environments,
+        env,
+        serviceNames,
+        userId
+      );
+
+      allReleased.push(...released.map(r => ({ ...r, env })));
+      allAutoClaimed.push(...autoClaimed.map(ac => ({ ...ac, env })));
+      allNotOwned.push(...notOwned.map(n => ({ ...n, env })));
+    }
 
     // Build response message
     let message = `<@${userId}>:\n`;
 
-    if (released.length > 0) {
-      const releasedText = released.map(r => `${r.name} (${env}, ${r.duration})`).join(', ');
+    if (allReleased.length > 0) {
+      const releasedText = allReleased.map(r => `${r.name} (${r.env}, ${r.duration})`).join(', ');
       message += `✅ *Released*: ${releasedText}\n`;
     }
 
-    if (autoClaimed.length > 0) {
+    if (allAutoClaimed.length > 0) {
       message += `\n*Auto-claimed from queue:*\n`;
-      autoClaimed.forEach(ac => {
-        message += `• ${ac.name} (${env}) → <@${ac.nextUser}> (${ac.task})\n`;
+      allAutoClaimed.forEach(ac => {
+        message += `• ${ac.name} (${ac.env}) → <@${ac.nextUser}> (${ac.task})\n`;
       });
     }
 
-    if (notOwned.length > 0) {
-      const notOwnedText = notOwned.map(n => `${n.name} (${env}, ${n.reason})`).join(', ');
+    if (allNotOwned.length > 0) {
+      const notOwnedText = allNotOwned.map(n => `${n.name} (${n.env}, ${n.reason})`).join(', ');
       message += `\n⚠️ *Could not release*: ${notOwnedText}`;
     }
 
