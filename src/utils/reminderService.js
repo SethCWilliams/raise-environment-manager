@@ -67,8 +67,7 @@ async function sendReminder(client, service, envName, serviceName) {
               action_id: 'reminder_still_in_use',
               value: JSON.stringify({
                 env: envName,
-                service: serviceName,
-                channelId: service.channelId || null
+                service: serviceName
               })
             },
             {
@@ -81,8 +80,7 @@ async function sendReminder(client, service, envName, serviceName) {
               action_id: 'reminder_release',
               value: JSON.stringify({
                 env: envName,
-                service: serviceName,
-                channelId: service.channelId || null
+                service: serviceName
               })
             }
           ]

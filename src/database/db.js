@@ -12,6 +12,7 @@ db.exec(`
     owner TEXT,
     task TEXT,
     start_time INTEGER,
+    channel_id TEXT,
     PRIMARY KEY (environment, service_name)
   );
 
@@ -26,10 +27,21 @@ db.exec(`
   );
 `);
 
+// Migration: Add channel_id column if it doesn't exist (for existing databases)
+try {
+  db.exec(`ALTER TABLE services ADD COLUMN channel_id TEXT`);
+  console.log('✅ Added channel_id column to services table');
+} catch (err) {
+  // Column already exists or other error - that's okay
+  if (!err.message.includes('duplicate column name')) {
+    console.error('Migration warning:', err.message);
+  }
+}
+
 // Prepared statements for database operations
 const saveServiceStmt = db.prepare(`
-  INSERT OR REPLACE INTO services (environment, service_name, owner, task, start_time)
-  VALUES (?, ?, ?, ?, ?)
+  INSERT OR REPLACE INTO services (environment, service_name, owner, task, start_time, channel_id)
+  VALUES (?, ?, ?, ?, ?, ?)
 `);
 
 const loadServicesStmt = db.prepare(`
@@ -58,7 +70,8 @@ function saveServiceToDB(envName, serviceName, service) {
     serviceName,
     service.owner,
     service.task,
-    service.startTime
+    service.startTime,
+    service.channelId || null
   );
 
   // Update queue
@@ -89,6 +102,8 @@ function initializeEnvironments() {
         owner: dbService?.owner || null,
         task: dbService?.task || null,
         startTime: dbService?.start_time || null,
+        channelId: dbService?.channel_id || null,
+        lastReminderSent: null, // Not persisted - resets on restart
         queue: dbQueue.map(item => ({
           userId: item.user_id,
           task: item.task

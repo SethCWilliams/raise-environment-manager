@@ -4,6 +4,7 @@
  */
 
 const { processRelease } = require('../../utils/serviceOperations');
+const { NOTIFICATION_CHANNEL } = require('../../config');
 
 module.exports = async function({ command, respond, client }, environments, args) {
   const userId = command.user_id;
@@ -249,7 +250,7 @@ module.exports.registerHandlers = function(app, environments) {
 
     try {
       // Parse the button value to get context
-      const { env, service: serviceName, channelId } = JSON.parse(body.actions[0].value);
+      const { env, service: serviceName } = JSON.parse(body.actions[0].value);
       const userId = body.user.id;
 
       // Call the release function
@@ -275,8 +276,8 @@ module.exports.registerHandlers = function(app, environments) {
           ]
         });
 
-        // Post to the original channel if we have the channelId
-        if (channelId) {
+        // Post to the notification channel
+        if (NOTIFICATION_CHANNEL) {
           let message = `<@${userId}> released *${serviceName}* (${env}, held for ${releasedService.duration})`;
 
           // Check if someone auto-claimed from queue
@@ -287,13 +288,15 @@ module.exports.registerHandlers = function(app, environments) {
 
           try {
             await client.chat.postMessage({
-              channel: channelId,
+              channel: NOTIFICATION_CHANNEL,
               text: message
             });
           } catch (channelError) {
-            console.error('Error posting to channel:', channelError);
+            console.error('Error posting to notification channel:', channelError);
             // Not a critical error - the service is still released
           }
+        } else {
+          console.warn('No NOTIFICATION_CHANNEL configured - skipping channel notification');
         }
 
         console.log(`✅ Released ${serviceName} in ${env} via reminder DM by ${userId}`);

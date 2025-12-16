@@ -16,6 +16,10 @@ const ALLOWED_CHANNELS = process.env.ALLOWED_CHANNELS
   ? process.env.ALLOWED_CHANNELS.split(',').map(id => id.trim())
   : [];
 
+// Notification channel - where to send release/claim notifications
+// Defaults to first allowed channel, or can be set explicitly
+const NOTIFICATION_CHANNEL = process.env.NOTIFICATION_CHANNEL || (ALLOWED_CHANNELS.length > 0 ? ALLOWED_CHANNELS[0] : null);
+
 // Services list - comma-separated list of service names
 const SERVICES = process.env.SERVICES
   ? process.env.SERVICES.split(',').map(s => s.trim())
@@ -36,6 +40,7 @@ module.exports = {
   PORT,
   DB_PATH,
   ALLOWED_CHANNELS,
+  NOTIFICATION_CHANNEL,
   SERVICES,
   ENVIRONMENT_NAMES,
   CACHE_TTL
