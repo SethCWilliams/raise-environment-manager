@@ -253,7 +253,7 @@ module.exports.registerHandlers = function(app, environments) {
       const userId = body.user.id;
 
       // Call the release function
-      const result = await processRelease(environments[env], [serviceName], userId);
+      const result = await processRelease(environments, env, [serviceName], userId);
 
       if (result.released.length > 0) {
         // Successfully released
