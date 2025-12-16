@@ -13,7 +13,8 @@ const SUBCOMMANDS = {
   'dequeue': require('./subcommands/dequeue'),
   'prioritize': require('./subcommands/prioritize'),
   'force-drop': require('./subcommands/forceDrop'),
-  'help': require('./subcommands/help')
+  'help': require('./subcommands/help'),
+  'dm': require('./subcommands/dm')
 };
 
 module.exports = function(app, environments) {
@@ -92,4 +93,8 @@ module.exports = function(app, environments) {
   dequeueModal.registerHandlers(app, environments);
   prioritizeModal.registerHandlers(app, environments);
   queueModal.registerHandlers(app, environments);
+
+  // Register DM button handlers
+  const dmSubcommand = require('./subcommands/dm');
+  dmSubcommand.registerHandlers(app, environments);
 };
