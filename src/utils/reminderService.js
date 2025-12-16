@@ -133,7 +133,8 @@ async function checkAndSendReminders(app, environments) {
       // Send reminder if:
       // 1. Service has been held for over 2 hours
       // 2. No reminder sent yet OR last reminder was over 2 hours ago
-      if (duration > TWO_HOURS && timeSinceLastReminder > TWO_HOURS) {
+      // 3. There is a queue for this service
+      if (duration > TWO_HOURS && timeSinceLastReminder > TWO_HOURS && service.queue && service.queue.length > 0) {
         const success = await sendReminder(app.client, service, envName, serviceName);
 
         if (success) {
