@@ -194,19 +194,19 @@ function registerHandlers(app, environments) {
     let message = `<@${userId}>:\n`;
 
     if (released.length > 0) {
-      const releasedText = released.map(r => `${r.name} (${r.duration})`).join(', ');
+      const releasedText = released.map(r => `${r.name} (${env}, ${r.duration})`).join(', ');
       message += `✅ *Released*: ${releasedText}\n`;
     }
 
     if (autoClaimed.length > 0) {
       message += `\n*Auto-claimed from queue:*\n`;
       autoClaimed.forEach(ac => {
-        message += `• ${ac.name} → <@${ac.nextUser}> (${ac.task})\n`;
+        message += `• ${ac.name} (${env}) → <@${ac.nextUser}> (${ac.task})\n`;
       });
     }
 
     if (notOwned.length > 0) {
-      const notOwnedText = notOwned.map(n => `${n.name} (${n.reason})`).join(', ');
+      const notOwnedText = notOwned.map(n => `${n.name} (${env}, ${n.reason})`).join(', ');
       message += `\n⚠️ *Could not release*: ${notOwnedText}`;
     }
 
@@ -258,19 +258,19 @@ function registerHandlers(app, environments) {
     let message = `<@${userId}>:\n`;
 
     if (released.length > 0) {
-      const releasedText = released.map(r => `${r.name} (${r.duration})`).join(', ');
+      const releasedText = released.map(r => `${r.name} (${env}, ${r.duration})`).join(', ');
       message += `✅ *Released*: ${releasedText}\n`;
     }
 
     if (autoClaimed.length > 0) {
       message += `\n*Auto-claimed from queue:*\n`;
       autoClaimed.forEach(ac => {
-        message += `• ${ac.name} → <@${ac.nextUser}> (${ac.task})\n`;
+        message += `• ${ac.name} (${env}) → <@${ac.nextUser}> (${ac.task})\n`;
       });
     }
 
     if (notOwned.length > 0) {
-      const notOwnedText = notOwned.map(n => `${n.name} (${n.reason})`).join(', ');
+      const notOwnedText = notOwned.map(n => `${n.name} (${env}, ${n.reason})`).join(', ');
       message += `\n⚠️ *Could not release*: ${notOwnedText}`;
     }
 

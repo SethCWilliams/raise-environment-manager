@@ -277,12 +277,12 @@ module.exports.registerHandlers = function(app, environments) {
 
         // Post to the original channel if we have the channelId
         if (channelId) {
-          let message = `<@${userId}> released *${serviceName}* (held for ${releasedService.duration})`;
+          let message = `<@${userId}> released *${serviceName}* (${env}, held for ${releasedService.duration})`;
 
           // Check if someone auto-claimed from queue
           if (result.autoClaimed.length > 0) {
             const autoClaim = result.autoClaimed[0];
-            message += `\n:arrow_forward: <@${autoClaim.nextUser}> automatically claimed *${serviceName}* - ${autoClaim.task}`;
+            message += `\n:arrow_forward: <@${autoClaim.nextUser}> automatically claimed *${serviceName}* (${env}) - ${autoClaim.task}`;
           }
 
           try {

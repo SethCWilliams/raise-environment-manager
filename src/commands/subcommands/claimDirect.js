@@ -40,20 +40,23 @@ module.exports = async function({ command, say, respond }, environments, { env, 
   let message = `<@${userId}>:\n`;
 
   if (claimed.length > 0) {
-    message += `✅ *Claimed*: ${claimed.join(', ')}\n`;
+    const claimedText = claimed.map(s => `${s} (${env})`).join(', ');
+    message += `✅ *Claimed*: ${claimedText}\n`;
   }
 
   if (queued.length > 0) {
-    const queuedText = queued.map(q => `${q.name} (position ${q.position})`).join(', ');
+    const queuedText = queued.map(q => `${q.name} (${env}, position ${q.position})`).join(', ');
     message += `⏳ *Added to queue*: ${queuedText}\n`;
   }
 
   if (alreadyInQueue.length > 0) {
-    message += `ℹ️ *Already in queue*: ${alreadyInQueue.join(', ')}\n`;
+    const alreadyInQueueText = alreadyInQueue.map(s => `${s} (${env})`).join(', ');
+    message += `ℹ️ *Already in queue*: ${alreadyInQueueText}\n`;
   }
 
   if (alreadyOwned.length > 0) {
-    message += `ℹ️ *Already owned by you*: ${alreadyOwned.join(', ')}\n`;
+    const alreadyOwnedText = alreadyOwned.map(s => `${s} (${env})`).join(', ');
+    message += `ℹ️ *Already owned by you*: ${alreadyOwnedText}\n`;
   }
 
   message += `\n📋 Task: ${task}`;

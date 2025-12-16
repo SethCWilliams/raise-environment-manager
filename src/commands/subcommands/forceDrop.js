@@ -47,19 +47,20 @@ module.exports = async function({ command, say, respond }, environments, args) {
 
   if (released.length > 0) {
     released.forEach(r => {
-      message += `• ${r.name} (was owned by <@${r.previousOwner}> for ${r.duration})\n`;
+      message += `• ${r.name} (${env}, was owned by <@${r.previousOwner}> for ${r.duration})\n`;
     });
   }
 
   if (autoClaimed.length > 0) {
     message += '\n*Auto-claimed from queue:*\n';
     autoClaimed.forEach(ac => {
-      message += `• ${ac.name} → <@${ac.nextUser}> (${ac.task})\n`;
+      message += `• ${ac.name} (${env}) → <@${ac.nextUser}> (${ac.task})\n`;
     });
   }
 
   if (notClaimed.length > 0) {
-    message += `\n⚠️ *Not claimed*: ${notClaimed.join(', ')}`;
+    const notClaimedText = notClaimed.map(s => `${s} (${env})`).join(', ');
+    message += `\n⚠️ *Not claimed*: ${notClaimedText}`;
   }
 
   await say({

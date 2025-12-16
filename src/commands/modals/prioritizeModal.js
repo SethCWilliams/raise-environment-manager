@@ -222,16 +222,19 @@ function registerHandlers(app, environments) {
     let message = `<@${userId}>:\n`;
 
     if (claimed.length > 0) {
-      message += `✅ *Claimed* (service was available): ${claimed.join(', ')}\n`;
+      const claimedText = claimed.map(s => `${s} (${env})`).join(', ');
+      message += `✅ *Claimed* (service was available): ${claimedText}\n`;
     }
 
     if (takenOver.length > 0) {
-      message += `⚡ *PRIORITY TAKEOVER*: ${takenOver.join(', ')}\n`;
+      const takenOverText = takenOver.map(s => `${s} (${env})`).join(', ');
+      message += `⚡ *PRIORITY TAKEOVER*: ${takenOverText}\n`;
       message += `   Previous owner moved to queue position 1\n`;
     }
 
     if (alreadyOwned.length > 0) {
-      message += `ℹ️ *Already owned by you*: ${alreadyOwned.join(', ')}\n`;
+      const alreadyOwnedText = alreadyOwned.map(s => `${s} (${env})`).join(', ');
+      message += `ℹ️ *Already owned by you*: ${alreadyOwnedText}\n`;
     }
 
     message += `\n🔥 Task: ${task}`;
@@ -280,16 +283,19 @@ function registerHandlers(app, environments) {
     let message = `<@${userId}>:\n`;
 
     if (claimed.length > 0) {
-      message += `✅ *Claimed* (service was available): ${claimed.join(', ')}\n`;
+      const claimedText = claimed.map(s => `${s} (${env})`).join(', ');
+      message += `✅ *Claimed* (service was available): ${claimedText}\n`;
     }
 
     if (takenOver.length > 0) {
-      message += `⚡ *PRIORITY TAKEOVER*: ${takenOver.join(', ')}\n`;
+      const takenOverText = takenOver.map(s => `${s} (${env})`).join(', ');
+      message += `⚡ *PRIORITY TAKEOVER*: ${takenOverText}\n`;
       message += `   Previous owner moved to queue position 1\n`;
     }
 
     if (alreadyOwned.length > 0) {
-      message += `ℹ️ *Already owned by you*: ${alreadyOwned.join(', ')}\n`;
+      const alreadyOwnedText = alreadyOwned.map(s => `${s} (${env})`).join(', ');
+      message += `ℹ️ *Already owned by you*: ${alreadyOwnedText}\n`;
     }
 
     message += `\n🔥 Task: ${task}`;

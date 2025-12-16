@@ -214,16 +214,18 @@ function registerHandlers(app, environments) {
     if (queued.length > 0) {
       message += `⏳ *Added to queue in ${env}*:\n`;
       queued.forEach(q => {
-        message += `  • ${q.name} (position ${q.position})\n`;
+        message += `  • ${q.name} (${env}, position ${q.position})\n`;
       });
     }
 
     if (available.length > 0) {
-      message += `\n💡 *Available (use /claim instead)*: ${available.join(', ')}`;
+      const availableText = available.map(s => `${s} (${env})`).join(', ');
+      message += `\n💡 *Available (use /claim instead)*: ${availableText}`;
     }
 
     if (alreadyQueued.length > 0) {
-      message += `\nℹ️ *Already in queue*: ${alreadyQueued.join(', ')}`;
+      const alreadyQueuedText = alreadyQueued.map(s => `${s} (${env})`).join(', ');
+      message += `\nℹ️ *Already in queue*: ${alreadyQueuedText}`;
     }
 
     if (queued.length > 0) {
@@ -276,16 +278,18 @@ function registerHandlers(app, environments) {
     if (queued.length > 0) {
       message += `⏳ *Added to queue in ${env}*:\n`;
       queued.forEach(q => {
-        message += `  • ${q.name} (position ${q.position})\n`;
+        message += `  • ${q.name} (${env}, position ${q.position})\n`;
       });
     }
 
     if (available.length > 0) {
-      message += `\n💡 *Available (use /claim instead)*: ${available.join(', ')}`;
+      const availableText = available.map(s => `${s} (${env})`).join(', ');
+      message += `\n💡 *Available (use /claim instead)*: ${availableText}`;
     }
 
     if (alreadyQueued.length > 0) {
-      message += `\nℹ️ *Already in queue*: ${alreadyQueued.join(', ')}`;
+      const alreadyQueuedText = alreadyQueued.map(s => `${s} (${env})`).join(', ');
+      message += `\nℹ️ *Already in queue*: ${alreadyQueuedText}`;
     }
 
     if (queued.length > 0) {
