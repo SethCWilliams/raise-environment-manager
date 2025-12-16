@@ -168,14 +168,15 @@ function registerHandlers(app, environments) {
       });
     }
 
-    // Post message to channel
+    // Send ephemeral message to user
     try {
-      await client.chat.postMessage({
+      await client.chat.postEphemeral({
         channel: channel_id,
+        user: userId,
         text: message.trim()
       });
     } catch (error) {
-      console.error('Error posting message:', error);
+      console.error('Error posting ephemeral message:', error);
     }
   });
 }
