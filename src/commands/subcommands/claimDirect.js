@@ -32,7 +32,8 @@ module.exports = async function({ command, say, respond }, environments, { env, 
     env,
     serviceNames,
     userId,
-    task
+    task,
+    command.channel_id // Track channel for reminder DMs
   );
 
   // Build response message

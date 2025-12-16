@@ -31,6 +31,10 @@ webApp.use(express.static(path.join(__dirname, 'public')));
 // In-memory storage for environment state (loaded from database)
 const environments = initializeEnvironments();
 
+// Start reminder service for 2-hour DM notifications
+const reminderService = require('./src/utils/reminderService');
+reminderService.start(app, environments);
+
 // Setup Slack commands
 setupClaimCommand(app, environments);
 

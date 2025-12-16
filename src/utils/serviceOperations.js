@@ -5,7 +5,7 @@ const { saveServiceToDB } = require('../database/db');
  * Process claim for multiple services
  * @returns {Object} { claimed, queued, alreadyInQueue, alreadyOwned }
  */
-function processClaim(environments, env, serviceNames, userId, task) {
+function processClaim(environments, env, serviceNames, userId, task, channelId = null) {
   const claimed = [];
   const queued = [];
   const alreadyInQueue = [];
@@ -34,6 +34,8 @@ function processClaim(environments, env, serviceNames, userId, task) {
       service.owner = userId;
       service.task = task;
       service.startTime = Date.now();
+      service.channelId = channelId; // Track where claimed from for reminder DMs
+      service.lastReminderSent = null; // Reset reminder tracking
       claimed.push(serviceName);
       saveServiceToDB(env, serviceName, service);
     }
@@ -80,6 +82,8 @@ function processRelease(environments, env, serviceNames, userId) {
       service.owner = nextPerson.userId;
       service.task = nextPerson.task;
       service.startTime = Date.now();
+      service.lastReminderSent = null; // Reset reminder tracking for new owner
+      // Keep channelId from previous owner so reminders post to same channel
 
       autoClaimed.push({
         name: serviceName,
@@ -92,6 +96,8 @@ function processRelease(environments, env, serviceNames, userId) {
       service.owner = null;
       service.task = null;
       service.startTime = null;
+      service.channelId = null; // Clear channel tracking
+      service.lastReminderSent = null; // Clear reminder tracking
       saveServiceToDB(env, serviceName, service);
     }
   }
@@ -139,6 +145,8 @@ function processForceRelease(environments, env, serviceNames, adminUserId) {
       service.owner = nextPerson.userId;
       service.task = nextPerson.task;
       service.startTime = Date.now();
+      service.lastReminderSent = null; // Reset reminder tracking for new owner
+      // Keep channelId from previous owner so reminders post to same channel
 
       autoClaimed.push({
         name: serviceName,
@@ -151,6 +159,8 @@ function processForceRelease(environments, env, serviceNames, adminUserId) {
       service.owner = null;
       service.task = null;
       service.startTime = null;
+      service.channelId = null; // Clear channel tracking
+      service.lastReminderSent = null; // Clear reminder tracking
       saveServiceToDB(env, serviceName, service);
     }
   }

@@ -152,7 +152,8 @@ function registerHandlers(app, environments) {
       env,
       serviceNames,
       userId,
-      task
+      task,
+      channel_id // Track channel for reminder DMs
     );
 
     // Build response message
@@ -214,7 +215,8 @@ function registerHandlers(app, environments) {
       env,
       serviceNames,
       userId,
-      task
+      task,
+      channel_id // Track channel for reminder DMs
     );
 
     // Build response message

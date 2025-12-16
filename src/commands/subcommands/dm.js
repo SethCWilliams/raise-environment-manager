@@ -3,6 +3,8 @@
  * Sends a test DM with interactive buttons to the user
  */
 
+const { processRelease } = require('../../utils/serviceOperations');
+
 module.exports = async function({ command, respond, client }, environments, args) {
   const userId = command.user_id;
 
@@ -177,6 +179,163 @@ module.exports.registerHandlers = function(app, environments) {
       });
     } catch (error) {
       console.error('Error handling Release button:', error);
+    }
+  });
+
+  // ============ REMINDER BUTTON HANDLERS ============
+
+  // Handle "Still in Use" button from reminder DMs
+  app.action('reminder_still_in_use', async ({ ack, body, client }) => {
+    await ack();
+
+    try {
+      // Parse the button value to get context
+      const { env, service: serviceName } = JSON.parse(body.actions[0].value);
+      const userId = body.user.id;
+
+      // Reset the timer for this service
+      const environment = environments[env];
+      if (environment && environment.services[serviceName]) {
+        const service = environment.services[serviceName];
+
+        if (service.owner === userId) {
+          // Reset start time and clear reminder tracking
+          service.startTime = Date.now();
+          service.lastReminderSent = null;
+
+          // Update the message to confirm
+          await client.chat.update({
+            channel: body.channel.id,
+            ts: body.message.ts,
+            text: 'Still in use - timer reset',
+            blocks: [
+              {
+                type: 'section',
+                text: {
+                  type: 'mrkdwn',
+                  text: `:white_check_mark: *Timer reset for \`${serviceName}\` in \`${env}\`*\n\nYou'll get another reminder in 2 hours if you still have it.`
+                }
+              }
+            ]
+          });
+
+          console.log(`⏰ Timer reset for ${serviceName} in ${env} by ${userId}`);
+        } else {
+          // User no longer owns this service
+          await client.chat.update({
+            channel: body.channel.id,
+            ts: body.message.ts,
+            text: 'Service already released',
+            blocks: [
+              {
+                type: 'section',
+                text: {
+                  type: 'mrkdwn',
+                  text: `:information_source: *\`${serviceName}\` in \`${env}\` is no longer claimed by you.*`
+                }
+              }
+            ]
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error handling reminder Still in Use button:', error);
+    }
+  });
+
+  // Handle "Release" button from reminder DMs
+  app.action('reminder_release', async ({ ack, body, client }) => {
+    await ack();
+
+    try {
+      // Parse the button value to get context
+      const { env, service: serviceName, channelId } = JSON.parse(body.actions[0].value);
+      const userId = body.user.id;
+
+      // Call the release function
+      const result = await processRelease(environments[env], [serviceName], userId);
+
+      if (result.released.length > 0) {
+        // Successfully released
+        const releasedService = result.released[0];
+
+        // Update the DM message
+        await client.chat.update({
+          channel: body.channel.id,
+          ts: body.message.ts,
+          text: 'Service released',
+          blocks: [
+            {
+              type: 'section',
+              text: {
+                type: 'mrkdwn',
+                text: `:white_check_mark: *Released \`${serviceName}\` in \`${env}\`*\n\nHeld for ${releasedService.duration}`
+              }
+            }
+          ]
+        });
+
+        // Post to the original channel if we have the channelId
+        if (channelId) {
+          let message = `<@${userId}> released *${serviceName}* (held for ${releasedService.duration})`;
+
+          // Check if someone auto-claimed from queue
+          if (result.autoClaimed.length > 0) {
+            const autoClaim = result.autoClaimed[0];
+            message += `\n:arrow_forward: <@${autoClaim.nextUser}> automatically claimed *${serviceName}* - ${autoClaim.task}`;
+          }
+
+          try {
+            await client.chat.postMessage({
+              channel: channelId,
+              text: message
+            });
+          } catch (channelError) {
+            console.error('Error posting to channel:', channelError);
+            // Not a critical error - the service is still released
+          }
+        }
+
+        console.log(`✅ Released ${serviceName} in ${env} via reminder DM by ${userId}`);
+      } else if (result.notOwned.length > 0) {
+        // User doesn't own this service
+        await client.chat.update({
+          channel: body.channel.id,
+          ts: body.message.ts,
+          text: 'Not your service',
+          blocks: [
+            {
+              type: 'section',
+              text: {
+                type: 'mrkdwn',
+                text: `:information_source: *You don't own \`${serviceName}\` in \`${env}\`*\n\nIt may have already been released or claimed by someone else.`
+              }
+            }
+          ]
+        });
+      }
+    } catch (error) {
+      console.error('Error handling reminder Release button:', error);
+
+      // Try to update the message to show an error
+      try {
+        await client.chat.update({
+          channel: body.channel.id,
+          ts: body.message.ts,
+          text: 'Error releasing service',
+          blocks: [
+            {
+              type: 'section',
+              text: {
+                type: 'mrkdwn',
+                text: ':x: *Error releasing service*\n\nPlease try releasing manually with `/claim drop`'
+              }
+            }
+          ]
+        });
+      } catch (updateError) {
+        console.error('Error updating error message:', updateError);
+      }
     }
   });
 };
